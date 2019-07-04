@@ -1,123 +1,223 @@
-/// A runtime module template with necessary imports
+/// A runtime module implementing a Craigslist-style marketplace
+/// plus a reputation system. This module is intended to be a
+/// minimal example of a system that requires a reputation system
+/// and demonstrates how to use various reputation systems
 
-/// Feel free to remove or edit this file as needed.
-/// If you change the name of this file, make sure to update its references in runtime/src/lib.rs
-/// If you remove this file, you can remove those references
-
-
-/// For more guidance on Substrate modules, see the example module
-/// https://github.com/paritytech/substrate/blob/master/srml/example/src/lib.rs
-
-use support::{decl_module, decl_storage, decl_event, StorageValue, dispatch::Result};
+use support::{ensure, decl_module, decl_storage, decl_event, StorageValue, StorageMap, dispatch::Result};
 use system::ensure_signed;
+use parity_codec::{ Encode, Decode };
 
-/// The module's configuration trait.
+/// Marketplace configuration trait.
 pub trait Trait: system::Trait {
-	// TODO: Add other types and constants required configure this module.
+    // TODO Add notion of reputation system
 
-	/// The overarching event type.
-	type Event: From<Event<Self>> + Into<<Self as system::Trait>::Event>;
+    /// The overarching event type.
+    type Event: From<Event<Self>> + Into<<Self as system::Trait>::Event>;
+}
+
+
+type ListingId = u32;
+
+#[derive(Encode, Decode, Default, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "std", derive(Debug))]
+pub struct Listing <AccountId> {
+    seller: AccountId,
+    price: u32,
+    // Description should be string, but those are hard
+    // And we're just testing.
+    description: u32,
+}
+
+/// States a listing can be in
+#[derive(Encode, Decode, Clone, PartialEq)]
+#[cfg_attr(feature = "std", derive(Debug))]
+pub enum Status {
+    Active,
+    Sold,
+    SellerReviewed,
+    BuyerReviewed,
+    // There is no status for settled. Once both reviews
+    // have come in, the sale is removed from storage.
+}
+
+// Status has to have a default value to be used as a storage item... it seems
+impl Default for Status {
+    fn default() -> Self {
+        Self::Active
+    }
 }
 
 /// This module's storage items.
 decl_storage! {
-	trait Store for Module<T: Trait> as TemplateModule {
-		// Just a dummy storage item. 
-		// Here we are declaring a StorageValue, `Something` as a Option<u32>
-		// `get(something)` is the default getter which returns either the stored `u32` or `None` if nothing stored
-		Something get(something): Option<u32>;
-	}
+    trait Store for Module<T: Trait> as Marketplace {
+        NextId get(next_id): ListingId;
+        Listings get(listing): map ListingId => Listing<T::AccountId>;
+        Buyers get(buyer): map ListingId => T::AccountId;
+        // TODO why doesn't this compile.
+        // How does democracy store enum variants for Aye and Nay?
+        Statuses get(status): map ListingId => Status;
+    }
 }
 
 decl_module! {
-	/// The module declaration.
-	pub struct Module<T: Trait> for enum Call where origin: T::Origin {
-		// Initializing events
-		// this is needed only if you are using events in your module
-		fn deposit_event<T>() = default;
+    /// The module declaration.
+    pub struct Module<T: Trait> for enum Call where origin: T::Origin {
+        // Initializing events
+        // this is needed only if you are using events in your module
+        fn deposit_event<T>() = default;
 
-		// Just a dummy entry point.
-		// function that can be called by the external world as an extrinsics call
-		// takes a parameter of the type `AccountId`, stores it and emits an event
-		pub fn do_something(origin, something: u32) -> Result {
-			// TODO: You only need this if you want to check it was signed.
-			let who = ensure_signed(origin)?;
 
-			// TODO: Code to execute when something calls this.
-			// For example: the following line stores the passed in u32 in the storage
-			<Something<T>>::put(something);
+        pub fn post_listing(origin, listing: Listing<T::AccountId>) -> Result {
+            let seller = ensure_signed(origin)?;
 
-			// here we are raising the Something event
-			Self::deposit_event(RawEvent::SomethingStored(something, who));
-			Ok(())
-		}
-	}
+            let listing_id = <NextId<T>>::get();
+            <NextId<T>>::mutate(|n| *n += 1);
+            <Listings<T>>::insert(listing_id, &listing);
+
+
+            // Raise the event
+            Self::deposit_event(RawEvent::Posted(seller, listing_id, listing));
+            Ok(())
+        }
+
+        pub fn cancel_listing(origin, listing_id: ListingId) -> Result {
+            let sender = ensure_signed(origin)?;
+            ensure!(<Listings<T>>::exists(listing_id), "No such listing to cancel");
+            ensure!(<Statuses<T>>::get(listing_id) == Status::Active, "Cannot cancel already-sold listing");
+            ensure!(<Listings<T>>::get(listing_id).seller == sender, "Cannot cancel another seller's listing");
+
+            // Remove listing from map
+            <Listings<T>>::remove(listing_id);
+            <Statuses<T>>::remove(listing_id);
+            <Buyers<T>>::remove(listing_id);
+
+            // Emit Event
+            Self::deposit_event(RawEvent::Cancelled(listing_id));
+            Ok(())
+
+        }
+
+        pub fn buy(origin, listing_id: ListingId) -> Result {
+            let buyer = ensure_signed(origin)?;
+
+            ensure!(<Listings<T>>::exists(listing_id), "No such listing to buy");
+            ensure!(<Statuses<T>>::get(listing_id) != Status::Sold, "Listing already sold");
+            ensure!(<Listings<T>>::get(listing_id).seller != buyer, "Can't buy own listing");
+
+            // Update storage
+            <Buyers<T>>::insert(listing_id, &buyer);
+            <Statuses<T>>::insert(listing_id, Status::Sold);
+
+            // Emit Event
+            Self::deposit_event(RawEvent::Sold(buyer, listing_id));
+            Ok(())
+        }
+
+        pub fn review(origin, listing_id: ListingId) -> Result {
+            enum Role {Buyer, Seller}
+
+            let reviewer = ensure_signed(origin)?;
+
+            ensure!(<Listings<T>>::exists(listing_id), "No such listing");
+
+            let status = <Statuses<T>>::get(listing_id);
+            let (role, reviewee) =
+                if <Listings<T>>::get(listing_id).seller == reviewer {
+                    (Role::Seller, <Buyers<T>>::get(listing_id))
+                }
+                else if <Buyers<T>>::get(listing_id) == reviewer{
+                    (Role::Buyer, <Listings<T>>::get(listing_id).seller)
+                }
+                else {
+                    return Err("You were not involved in this listing");
+                };
+
+            match (status, role) {
+                (Status::Sold, Role::Buyer) => {
+                    <Statuses<T>>::insert(listing_id, Status::BuyerReviewed);
+                },
+                (Status::Sold, Role::Seller) => {
+                    <Statuses<T>>::insert(listing_id, Status::SellerReviewed);
+                },
+                (Status::SellerReviewed, Role::Buyer) |
+                (Status::BuyerReviewed, Role::Seller) => {
+                    <Statuses<T>>::remove(listing_id);
+                    <Listings<T>>::remove(listing_id);
+                    <Buyers<T>>::remove(listing_id);
+                },
+                _ => return Err("You've already reviewed this listing"),
+            }
+
+            //TODO actually call into the reputation system
+
+            Ok(())
+        }
+    }
 }
 
 decl_event!(
-	pub enum Event<T> where AccountId = <T as system::Trait>::AccountId {
-		// Just a dummy event.
-		// Event `Something` is declared with a parameter of the type `u32` and `AccountId`
-		// To emit this event, we call the deposit funtion, from our runtime funtions
-		SomethingStored(u32, AccountId),
-	}
+    pub enum Event<T> where AccountId = <T as system::Trait>::AccountId {
+        Posted(AccountId, ListingId, Listing<AccountId>),
+        Cancelled(ListingId),
+        Sold(AccountId, ListingId),
+    }
 );
 
 /// tests for this module
 #[cfg(test)]
 mod tests {
-	use super::*;
+    use super::*;
 
-	use runtime_io::with_externalities;
-	use primitives::{H256, Blake2Hasher};
-	use support::{impl_outer_origin, assert_ok};
-	use runtime_primitives::{
-		BuildStorage,
-		traits::{BlakeTwo256, IdentityLookup},
-		testing::{Digest, DigestItem, Header}
-	};
+    use runtime_io::with_externalities;
+    use primitives::{H256, Blake2Hasher};
+    use support::{impl_outer_origin, assert_ok};
+    use runtime_primitives::{
+        BuildStorage,
+        traits::{BlakeTwo256, IdentityLookup},
+        testing::{Digest, DigestItem, Header}
+    };
 
-	impl_outer_origin! {
-		pub enum Origin for Test {}
-	}
+    impl_outer_origin! {
+        pub enum Origin for Test {}
+    }
 
-	// For testing the module, we construct most of a mock runtime. This means
-	// first constructing a configuration type (`Test`) which `impl`s each of the
-	// configuration traits of modules we want to use.
-	#[derive(Clone, Eq, PartialEq)]
-	pub struct Test;
-	impl system::Trait for Test {
-		type Origin = Origin;
-		type Index = u64;
-		type BlockNumber = u64;
-		type Hash = H256;
-		type Hashing = BlakeTwo256;
-		type Digest = Digest;
-		type AccountId = u64;
-		type Lookup = IdentityLookup<Self::AccountId>;
-		type Header = Header;
-		type Event = ();
-		type Log = DigestItem;
-	}
-	impl Trait for Test {
-		type Event = ();
-	}
-	type TemplateModule = Module<Test>;
+    // For testing the module, we construct most of a mock runtime. This means
+    // first constructing a configuration type (`Test`) which `impl`s each of the
+    // configuration traits of modules we want to use.
+    #[derive(Clone, Eq, PartialEq)]
+    pub struct Test;
+    impl system::Trait for Test {
+        type Origin = Origin;
+        type Index = u64;
+        type BlockNumber = u64;
+        type Hash = H256;
+        type Hashing = BlakeTwo256;
+        type Digest = Digest;
+        type AccountId = u64;
+        type Lookup = IdentityLookup<Self::AccountId>;
+        type Header = Header;
+        type Event = ();
+        type Log = DigestItem;
+    }
+    impl Trait for Test {
+        type Event = ();
+    }
+    type TemplateModule = Module<Test>;
 
-	// This function basically just builds a genesis storage key/value store according to
-	// our desired mockup.
-	fn new_test_ext() -> runtime_io::TestExternalities<Blake2Hasher> {
-		system::GenesisConfig::<Test>::default().build_storage().unwrap().0.into()
-	}
+    // This function basically just builds a genesis storage key/value store according to
+    // our desired mockup.
+    fn new_test_ext() -> runtime_io::TestExternalities<Blake2Hasher> {
+        system::GenesisConfig::<Test>::default().build_storage().unwrap().0.into()
+    }
 
-	#[test]
-	fn it_works_for_default_value() {
-		with_externalities(&mut new_test_ext(), || {
-			// Just a dummy test for the dummy funtion `do_something`
-			// calling the `do_something` function with a value 42
-			assert_ok!(TemplateModule::do_something(Origin::signed(1), 42));
-			// asserting that the stored value is equal to what we stored
-			assert_eq!(TemplateModule::something(), Some(42));
-		});
-	}
+    #[test]
+    fn it_works_for_default_value() {
+        with_externalities(&mut new_test_ext(), || {
+            // Just a dummy test for the dummy funtion `do_something`
+            // calling the `do_something` function with a value 42
+            assert_ok!(TemplateModule::do_something(Origin::signed(1), 42));
+            // asserting that the stored value is equal to what we stored
+            assert_eq!(TemplateModule::something(), Some(42));
+        });
+    }
 }
