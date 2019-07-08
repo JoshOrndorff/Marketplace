@@ -16,6 +16,23 @@ pub trait Trait: system::Trait {
 }
 
 
+// Type info for js apps UI
+// {
+//   "ListingId": "u32",
+//   "Listing": {
+//     "seller": "AccountId",
+//     "price": "u32",
+//     "description": "u32"
+//   },
+//   "Status": {
+//     "_enum": [
+//       "Active",
+//       "Sold",
+//       "SellerReviewed",
+//       "BuyerReviewed"
+//     ]
+//   }
+// }
 type ListingId = u32;
 
 #[derive(Encode, Decode, Default, Clone, PartialEq, Eq)]
@@ -47,11 +64,11 @@ impl Default for Status {
     }
 }
 
-/// This module's storage items.
+// This module's storage items.
 decl_storage! {
     trait Store for Module<T: Trait> as Marketplace {
         NextId get(next_id): ListingId;
-        Listings get(listing): map ListingId => Listing<T::AccountId>;
+        Listings get(listing): map ListingId => Option<Listing<T::AccountId>>;
         Buyers get(buyer): map ListingId => T::AccountId;
         // TODO why doesn't this compile.
         // How does democracy store enum variants for Aye and Nay?
@@ -84,7 +101,7 @@ decl_module! {
             let sender = ensure_signed(origin)?;
             ensure!(<Listings<T>>::exists(listing_id), "No such listing to cancel");
             ensure!(<Statuses<T>>::get(listing_id) == Status::Active, "Cannot cancel already-sold listing");
-            ensure!(<Listings<T>>::get(listing_id).seller == sender, "Cannot cancel another seller's listing");
+            ensure!(<Listings<T>>::get(listing_id).unwrap().seller == sender, "Cannot cancel another seller's listing");
 
             // Remove listing from map
             <Listings<T>>::remove(listing_id);
@@ -102,7 +119,7 @@ decl_module! {
 
             ensure!(<Listings<T>>::exists(listing_id), "No such listing to buy");
             ensure!(<Statuses<T>>::get(listing_id) != Status::Sold, "Listing already sold");
-            ensure!(<Listings<T>>::get(listing_id).seller != buyer, "Can't buy own listing");
+            ensure!(<Listings<T>>::get(listing_id).unwrap().seller != buyer, "Can't buy own listing");
 
             // Update storage
             <Buyers<T>>::insert(listing_id, &buyer);
@@ -122,11 +139,11 @@ decl_module! {
 
             let status = <Statuses<T>>::get(listing_id);
             let (role, reviewee) =
-                if <Listings<T>>::get(listing_id).seller == reviewer {
+                if <Listings<T>>::get(listing_id).unwrap().seller == reviewer {
                     (Role::Seller, <Buyers<T>>::get(listing_id))
                 }
                 else if <Buyers<T>>::get(listing_id) == reviewer{
-                    (Role::Buyer, <Listings<T>>::get(listing_id).seller)
+                    (Role::Buyer, <Listings<T>>::get(listing_id).unwrap().seller)
                 }
                 else {
                     return Err("You were not involved in this listing");
