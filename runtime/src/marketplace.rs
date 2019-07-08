@@ -70,8 +70,6 @@ decl_storage! {
         NextId get(next_id): ListingId;
         Listings get(listing): map ListingId => Option<Listing<T::AccountId>>;
         Buyers get(buyer): map ListingId => T::AccountId;
-        // TODO why doesn't this compile.
-        // How does democracy store enum variants for Aye and Nay?
         Statuses get(status): map ListingId => Status;
     }
 }
