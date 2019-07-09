@@ -1,3 +1,6 @@
+use support::dispatch::Result;
+use parity_codec::{ Encode, Decode };
+
 pub trait Reputation<AccountId> {
     /// The reputational score of an account. (Probably u32 or some token)
     type Score;
@@ -8,7 +11,7 @@ pub trait Reputation<AccountId> {
     /// One account assigns a rating to another.
     /// In general this may affect both of their reputations.
     fn rate(rater: &AccountId, ratee: &AccountId, feedback: Self::Feedback)
-      -> Result<(), &'static str>;
+      -> Result;
 
     // Create a feedback form. A feedback form must exist in order for a user to rate another user.
     // This is an idea that may be wise or unnecessary, but for now we omit it.
@@ -18,8 +21,19 @@ pub trait Reputation<AccountId> {
     fn reputation(who : &AccountId) -> Self::Score;
 }
 
-pub enum SimpleFeedback {
+#[derive(Encode, Decode, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "std", derive(Debug))]
+pub enum DefaultFeedback {
     Positive,
     Neutral,
     Negative,
 }
+
+// Type info for js apps UI
+// "DefaultFeedback": {
+//   "_enum": [
+//     "Positive",
+//     "Neutral",
+//     "Negative"
+//   ]
+// }

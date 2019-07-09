@@ -7,9 +7,13 @@ use support::{ensure, decl_module, decl_storage, decl_event, StorageValue, Stora
 use system::ensure_signed;
 use parity_codec::{ Encode, Decode };
 
+// Use the Reputation trait
+use crate::reputation_trait;
+
 /// Marketplace configuration trait.
 pub trait Trait: system::Trait {
-    // TODO Add notion of reputation system
+    // Notaion of reputation system
+    type Reputation: reputation_trait::Reputation<Self::AccountId>;
 
     /// The overarching event type.
     type Event: From<Event<Self>> + Into<<Self as system::Trait>::Event>;

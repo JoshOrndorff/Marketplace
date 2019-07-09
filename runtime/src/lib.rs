@@ -58,6 +58,9 @@ pub type Nonce = u64;
 /// The marketplace module in `./marketplace.rs`
 mod marketplace;
 
+mod reputation_trait;
+mod simple_feedback;
+
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
 /// of data like extrinsics, allowing for them to continue syncing the network through upgrades
@@ -188,6 +191,11 @@ impl sudo::Trait for Runtime {
 }
 
 impl marketplace::Trait for Runtime {
+	type Reputation = SimpleFeedback;
+	type Event = Event;
+}
+
+impl simple_feedback::Trait for Runtime {
 	type Event = Event;
 }
 
@@ -205,6 +213,7 @@ construct_runtime!(
 		Balances: balances,
 		Sudo: sudo,
 		Marketplace: marketplace::{Module, Call, Storage, Event<T>},
+		SimpleFeedback: simple_feedback::{Module, Storage, Event<T>},
 	}
 );
 
