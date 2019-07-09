@@ -10,7 +10,7 @@ pub trait Reputation<AccountId> {
 
     /// One account assigns a rating to another.
     /// In general this may affect both of their reputations.
-    fn rate(rater: &AccountId, ratee: &AccountId, feedback: Self::Feedback)
+    fn rate(rater: AccountId, ratee: AccountId, feedback: Self::Feedback)
       -> Result;
 
     // Create a feedback form. A feedback form must exist in order for a user to rate another user.
@@ -18,7 +18,7 @@ pub trait Reputation<AccountId> {
     //fn issue_form(rater: &AccountIt, ratee: &AccountId);
 
     /// The current reputation of an account
-    fn reputation(who : &AccountId) -> Self::Score;
+    fn reputation(who : AccountId) -> Self::Score;
 }
 
 #[derive(Encode, Decode, Clone, PartialEq, Eq)]

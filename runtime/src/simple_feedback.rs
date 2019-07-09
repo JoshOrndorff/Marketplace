@@ -8,7 +8,7 @@
 /// For more guidance on Substrate modules, see the example module
 /// https://github.com/paritytech/substrate/blob/master/srml/example/src/lib.rs
 
-use support::{decl_module, decl_storage, decl_event, StorageValue, dispatch::Result};
+use support::{decl_module, decl_storage, decl_event, StorageMap, dispatch::Result};
 use system::ensure_signed;
 
 use crate::reputation_trait::{ Reputation, DefaultFeedback };
@@ -19,27 +19,16 @@ pub trait Trait: system::Trait {
     type Event: From<Event<Self>> + Into<<Self as system::Trait>::Event>;
 }
 
-// Implement the reputation trait
-impl<T: Trait> Reputation<T::AccountId> for Module<T> {
-    type Score = u32;
-    type Feedback = DefaultFeedback;
-
-    fn rate(rater: &T::AccountId, ratee: &T::AccountId, feedback: DefaultFeedback) -> Result {
-        Ok(())
-    }
-
-    fn reputation(who: &T::AccountId) -> Self::Score {
-        1
-    }
-}
+type Score = i32;
 
 // This module's storage items.
 decl_storage! {
-	trait Store for Module<T: Trait> as TemplateModule {
-		// Just a dummy storage item.
-		// Here we are declaring a StorageValue, `Something` as a Option<u32>
-		// `get(something)` is the default getter which returns either the stored `u32` or `None` if nothing stored
-		Something get(something): Option<u32>;
+	trait Store for Module<T: Trait> as SimpleFeedback {
+        //TODO Can I put reputation function here as the getter
+        // and still satisfy the trait?
+        // Probably not, this would be dispatchable.
+        // So can I use the same name then?
+		Scores get(score): map T::AccountId => Score;
 	}
 }
 
@@ -50,6 +39,32 @@ decl_module! {
 		// this is needed only if you are using events in your module
 		fn deposit_event<T>() = default;
 	}
+}
+
+// Implement the reputation trait
+impl<T: Trait> Reputation<T::AccountId> for Module<T> {
+    type Score = Score;
+    type Feedback = DefaultFeedback;
+
+    fn rate(rater: T::AccountId, ratee: T::AccountId, feedback: DefaultFeedback) -> Result {
+
+        // TODO This is not safe against overflow
+        let delta = match feedback {
+            DefaultFeedback::Positive => 1,
+            DefaultFeedback::Neutral => 0,
+            DefaultFeedback::Negative => -1,
+        };
+
+        <Scores<T>>::mutate(&ratee, |s| *s += delta);
+
+        Self::deposit_event(RawEvent::Rated(rater, ratee, feedback));
+
+        Ok(())
+    }
+
+    fn reputation(who: T::AccountId) -> Self::Score {
+        1
+    }
 }
 
 decl_event!(
