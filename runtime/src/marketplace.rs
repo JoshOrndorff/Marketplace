@@ -132,7 +132,7 @@ decl_module! {
             Ok(())
         }
 
-        pub fn review(origin, listing_id: ListingId) -> Result {
+        pub fn review(origin, listing_id: ListingId, feedback: T::Reputation::Feedback) -> Result {
             enum Role {Buyer, Seller}
 
             let reviewer = ensure_signed(origin)?;
