@@ -13,7 +13,7 @@ use crate::reputation_trait;
 /// Marketplace configuration trait.
 pub trait Trait: system::Trait {
     // Notaion of reputation system
-    type Reputation: reputation_trait::Reputation<Self::AccountId>;
+    type ReputationSystem: reputation_trait::Reputation<Self::AccountId>;
 
     /// The overarching event type.
     type Event: From<Event<Self>> + Into<<Self as system::Trait>::Event>;
@@ -132,7 +132,10 @@ decl_module! {
             Ok(())
         }
 
-        pub fn review(origin, listing_id: ListingId, feedback: <<T as Trait>::Reputation as Trait>::Feedback) -> Result {
+        //TODO Follow Basti's advice
+        // type FeedbackOf<T> = <<T as Trait>::Reputation as reputation_trait::Reputation<T::AccountId>>::Feedback;
+        pub fn review(origin, listing_id: ListingId, feedback: <<T as Trait>::ReputationSystem as reputation_trait::Reputation<T::AccountId>>::Feedback) -> Result {
+
             enum Role {Buyer, Seller}
 
             let reviewer = ensure_signed(origin)?;
@@ -167,7 +170,8 @@ decl_module! {
                 _ => return Err("You've already reviewed this listing"),
             }
 
-            //TODO actually call into the reputation system
+            // Call into the reputation system
+            let _ = <<T as Trait>::ReputationSystem as reputation_trait::Reputation<T::AccountId>>::rate(reviewer, reviewee, feedback);
 
             Ok(())
         }

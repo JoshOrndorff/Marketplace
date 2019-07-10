@@ -1,15 +1,8 @@
-/// A runtime module template with necessary imports
-
-/// Feel free to remove or edit this file as needed.
-/// If you change the name of this file, make sure to update its references in runtime/src/lib.rs
-/// If you remove this file, you can remove those references
-
-
-/// For more guidance on Substrate modules, see the example module
-/// https://github.com/paritytech/substrate/blob/master/srml/example/src/lib.rs
+/// A simple reputation system in which a user's reputation
+/// increases by 1 on recieving positive feedback, and decreases
+/// by 1 when receiving negative feedback
 
 use support::{decl_module, decl_storage, decl_event, StorageMap, dispatch::Result};
-use system::ensure_signed;
 
 use crate::reputation_trait::{ Reputation, DefaultFeedback };
 
@@ -24,11 +17,7 @@ type Score = i32;
 // This module's storage items.
 decl_storage! {
 	trait Store for Module<T: Trait> as SimpleFeedback {
-        //TODO Can I put reputation function here as the getter
-        // and still satisfy the trait?
-        // Probably not, this would be dispatchable.
-        // So can I use the same name then?
-		Scores get(score): map T::AccountId => Score;
+		Scores: map T::AccountId => Score;
 	}
 }
 
@@ -48,13 +37,13 @@ impl<T: Trait> Reputation<T::AccountId> for Module<T> {
 
     fn rate(rater: T::AccountId, ratee: T::AccountId, feedback: DefaultFeedback) -> Result {
 
-        // TODO This is not safe against overflow
         let delta = match feedback {
             DefaultFeedback::Positive => 1,
             DefaultFeedback::Neutral => 0,
             DefaultFeedback::Negative => -1,
         };
 
+        // TODO This is not safe against overflow
         <Scores<T>>::mutate(&ratee, |s| *s += delta);
 
         Self::deposit_event(RawEvent::Rated(rater, ratee, feedback));
@@ -63,7 +52,7 @@ impl<T: Trait> Reputation<T::AccountId> for Module<T> {
     }
 
     fn reputation(who: T::AccountId) -> Self::Score {
-        1
+        <Scores<T>>::get(&who)
     }
 }
 

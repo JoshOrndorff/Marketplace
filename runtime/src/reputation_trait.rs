@@ -1,12 +1,15 @@
 use support::dispatch::Result;
-use parity_codec::{ Encode, Decode };
+// https://crates.parity.io/parity_codec/trait.Codec.html
+use parity_codec::{ Encode, Decode, Codec };
+// https://crates.parity.io/sr_primitives/traits/trait.Member.html
+use runtime_primitives::traits::Member;
 
 pub trait Reputation<AccountId> {
     /// The reputational score of an account. (Probably u32 or some token)
     type Score;
 
     /// The kind of feedback that will be given what ratings are assigned
-    type Feedback;
+    type Feedback: Member + Codec;
 
     /// One account assigns a rating to another.
     /// In general this may affect both of their reputations.
@@ -21,6 +24,7 @@ pub trait Reputation<AccountId> {
     fn reputation(who : AccountId) -> Self::Score;
 }
 
+// TODO why couldn't I use Codec instead of Endoce, Decode here?
 #[derive(Encode, Decode, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "std", derive(Debug))]
 pub enum DefaultFeedback {

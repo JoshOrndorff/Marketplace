@@ -191,7 +191,7 @@ impl sudo::Trait for Runtime {
 }
 
 impl marketplace::Trait for Runtime {
-	type Reputation = SimpleFeedback;
+	type ReputationSystem = SimpleFeedback;
 	type Event = Event;
 }
 
