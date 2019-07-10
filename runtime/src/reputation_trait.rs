@@ -5,7 +5,7 @@ use parity_codec::{ Encode, Decode, Codec };
 use runtime_primitives::traits::Member;
 
 pub trait Reputation<AccountId> {
-    /// The reputational score of an account. (Probably u32 or some token)
+    /// The reputational score of an account. (Probably i32 or some token)
     type Score;
 
     /// The kind of feedback that will be given what ratings are assigned
