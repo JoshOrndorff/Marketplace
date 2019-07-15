@@ -86,8 +86,15 @@ decl_module! {
         fn deposit_event<T>() = default;
 
 
-        pub fn post_listing(origin, listing: Listing<T::AccountId>) -> Result {
-            let seller = ensure_signed(origin)?;
+        pub fn post_listing(origin, p: u32, d: u32) -> Result {
+            let s = ensure_signed(origin)?;
+
+            //TODO construct the listing here. Only seller can post their own listings
+            let listing = Listing::<T::AccountId> {
+                seller: s.clone(),
+                price: p,
+                description: d,
+            };
 
             let listing_id = <NextId<T>>::get();
             <NextId<T>>::mutate(|n| *n += 1);
@@ -95,7 +102,7 @@ decl_module! {
 
 
             // Raise the event
-            Self::deposit_event(RawEvent::Posted(seller, listing_id, listing));
+            Self::deposit_event(RawEvent::Posted(s, listing_id, listing));
             Ok(())
         }
 
@@ -222,10 +229,24 @@ mod tests {
         type Event = ();
         type Log = DigestItem;
     }
+
+    impl reputation_trait::Reputation<u64> for () {
+        type Score = ();
+        type Feedback = ();
+        fn rate(_rater: u64, _ratee: u64, _feedback: Self::Feedback)
+          -> Result {
+              Ok(())
+        }
+        fn reputation(_who : u64) -> Self::Score {
+            ()
+        }
+    }
+
     impl Trait for Test {
+        type ReputationSystem = ();
         type Event = ();
     }
-    type TemplateModule = Module<Test>;
+    type Marketplace = Module<Test>;
 
     // This function basically just builds a genesis storage key/value store according to
     // our desired mockup.
@@ -234,13 +255,14 @@ mod tests {
     }
 
     #[test]
-    fn it_works_for_default_value() {
+    fn listing_id_increments_correctly() {
         with_externalities(&mut new_test_ext(), || {
-            // Just a dummy test for the dummy funtion `do_something`
-            // calling the `do_something` function with a value 42
-            assert_ok!(TemplateModule::do_something(Origin::signed(1), 42));
+
+            // Post a listing
+            assert_ok!(Marketplace::post_listing(Origin::signed(1), 123, 456));
             // asserting that the stored value is equal to what we stored
-            assert_eq!(TemplateModule::something(), Some(42));
+            //assert_eq!(TemplateModule::something(), Some(42));
+            assert_eq!(Marketplace::next_id(),1);
         });
     }
 }
