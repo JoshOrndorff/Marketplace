@@ -60,6 +60,7 @@ mod marketplace;
 
 mod reputation_trait;
 mod simple_feedback;
+mod beta_feedback;
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
@@ -191,11 +192,16 @@ impl sudo::Trait for Runtime {
 }
 
 impl marketplace::Trait for Runtime {
-	type ReputationSystem = SimpleFeedback;
+	//type ReputationSystem = SimpleFeedback;
+	type ReputationSystem = BetaFeedback;
 	type Event = Event;
 }
 
 impl simple_feedback::Trait for Runtime {
+	type Event = Event;
+}
+
+impl beta_feedback::Trait for Runtime {
 	type Event = Event;
 }
 
@@ -214,6 +220,7 @@ construct_runtime!(
 		Sudo: sudo,
 		Marketplace: marketplace::{Module, Call, Storage, Event<T>},
 		SimpleFeedback: simple_feedback::{Module, Storage, Event<T>},
+		BetaFeedback: beta_feedback::{Module, Storage, Event<T>},
 	}
 );
 
