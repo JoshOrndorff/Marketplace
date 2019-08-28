@@ -29,6 +29,5 @@ pub trait Reputation<AccountId> {
 #[cfg_attr(feature = "std", derive(Debug))]
 pub enum DefaultFeedback {
     Positive,
-    Neutral,
     Negative,
 }

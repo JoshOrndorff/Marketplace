@@ -16,7 +16,6 @@
   "DefaultFeedback": {
     "_enum": [
       "Positive",
-      "Neutral",
       "Negative"
     ]
   }

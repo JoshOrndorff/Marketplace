@@ -39,7 +39,6 @@ impl<T: Trait> Reputation<T::AccountId> for Module<T> {
 
         let delta = match feedback {
             DefaultFeedback::Positive => 1,
-            DefaultFeedback::Neutral => 0,
             DefaultFeedback::Negative => -1,
         };
 
