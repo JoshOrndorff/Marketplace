@@ -54,7 +54,8 @@ impl<T: Trait> Reputation<T::AccountId> for Module<T> {
         // Update the current score
         // Probably this computation should be done off-chain
         // Then this system would reduce to keeping track of a tuple (p, n)
-        <Scores<T>>::insert(&ratee, Score::from_rational_approximation(3,4));
+        // TODO in Substrate 2.0 this is called from_rational_approximation
+        <Scores<T>>::insert(&ratee, Score::from_rational(3,4));
 
         Self::deposit_event(RawEvent::Rated(rater, ratee, feedback));
 
