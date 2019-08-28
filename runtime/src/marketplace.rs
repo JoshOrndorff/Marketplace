@@ -20,6 +20,7 @@ pub trait Trait: system::Trait {
 }
 
 type ListingId = u32;
+type FeedbackOf<T> = <<T as Trait>::ReputationSystem as reputation_trait::Reputation<<T as system::Trait>::AccountId>>::Feedback;
 
 #[derive(Encode, Decode, Default, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "std", derive(Debug))]
@@ -121,9 +122,8 @@ decl_module! {
             Ok(())
         }
 
-        //TODO Follow Basti's advice
-        // type FeedbackOf<T> = <<T as Trait>::Reputation as reputation_trait::Reputation<T::AccountId>>::Feedback;
-        pub fn review(origin, listing_id: ListingId, feedback: <<T as Trait>::ReputationSystem as reputation_trait::Reputation<T::AccountId>>::Feedback) -> Result {
+        ///  Submit feedback for your counterparty in the specified transaction.
+        pub fn review(origin, listing_id: ListingId, feedback: FeedbackOf<T>) -> Result {
 
             enum Role {Buyer, Seller}
 
