@@ -2,9 +2,10 @@
 /// (p + 1) / (p + n + 2)
 /// where p is the number of positive reviews and n is the number
 /// of negative reviews.
+/// The module itself only accumulates the totals of positive and
+/// negative ratings. Calculating the final score should be done offchain.
 
 use support::{decl_module, decl_storage, decl_event, StorageMap, dispatch::Result};
-use runtime_primitives::Perbill;
 use crate::reputation_trait::{ Reputation, DefaultFeedback };
 
 /// The module's configuration trait.
@@ -13,14 +14,13 @@ pub trait Trait: system::Trait {
 	type Event: From<Event<Self>> + Into<<Self as system::Trait>::Event>;
 }
 
-type Score = Perbill;
+type Score = (u32, u32);
 
 // This module's storage items.
 decl_storage! {
 	trait Store for Module<T: Trait> as SimpleFeedback {
 		Positives: map T::AccountId => u32;
 		Negatives: map T::AccountId => u32;
-		Scores: map T::AccountId => Score;
 	}
 }
 
@@ -50,20 +50,13 @@ impl<T: Trait> Reputation<T::AccountId> for Module<T> {
             },
         };
 
-        //TODO 3 and 4 should not be hard-coded
-        // Update the current score
-        // Probably this computation should be done off-chain
-        // Then this system would reduce to keeping track of a tuple (p, n)
-        // TODO in Substrate 2.0 this is called from_rational_approximation
-        <Scores<T>>::insert(&ratee, Score::from_rational(3,4));
-
         Self::deposit_event(RawEvent::Rated(rater, ratee, feedback));
 
         Ok(())
     }
 
     fn reputation(who: T::AccountId) -> Self::Score {
-        <Scores<T>>::get(&who)
+        (<Positives<T>>::get(&who), <Negatives<T>>::get(&who))
     }
 }
 
