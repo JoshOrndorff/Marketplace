@@ -1,0 +1,23 @@
+{
+  "ListingId": "u32",
+  "Listing": {
+    "seller": "AccountId",
+    "price": "u32",
+    "description": "u32"
+  },
+  "Status": {
+    "_enum": [
+      "Active",
+      "Sold",
+      "SellerReviewed",
+      "BuyerReviewed"
+    ]
+  },
+  "DefaultFeedback": {
+    "_enum": [
+      "Positive",
+      "Neutral",
+      "Negative"
+    ]
+  }
+}

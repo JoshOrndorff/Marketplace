@@ -19,24 +19,6 @@ pub trait Trait: system::Trait {
     type Event: From<Event<Self>> + Into<<Self as system::Trait>::Event>;
 }
 
-
-// Type info for js apps UI
-// {
-//   "ListingId": "u32",
-//   "Listing": {
-//     "seller": "AccountId",
-//     "price": "u32",
-//     "description": "u32"
-//   },
-//   "Status": {
-//     "_enum": [
-//       "Active",
-//       "Sold",
-//       "SellerReviewed",
-//       "BuyerReviewed"
-//     ]
-//   }
-// }
 type ListingId = u32;
 
 #[derive(Encode, Decode, Default, Clone, PartialEq, Eq)]

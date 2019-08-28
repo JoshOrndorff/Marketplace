@@ -32,12 +32,3 @@ pub enum DefaultFeedback {
     Neutral,
     Negative,
 }
-
-// Type info for js apps UI
-// "DefaultFeedback": {
-//   "_enum": [
-//     "Positive",
-//     "Neutral",
-//     "Negative"
-//   ]
-// }
