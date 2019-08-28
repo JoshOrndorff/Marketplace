@@ -41,7 +41,7 @@ pub enum Status {
     SellerReviewed,
     BuyerReviewed,
     // There is no status for settled. Once both reviews
-    // have come in, the sale is removed from storage.
+    // have come in, the sale is removed from storage, and an event emitted.
 }
 
 // Status has to have a default value to be used as a storage item... it seems
@@ -68,11 +68,11 @@ decl_module! {
         // this is needed only if you are using events in your module
         fn deposit_event<T>() = default;
 
-
+        /// Post a listing for an item for sale.
         pub fn post_listing(origin, p: u32, d: u32) -> Result {
             let s = ensure_signed(origin)?;
 
-            //TODO construct the listing here. Only seller can post their own listings
+            // Construct the listing struct.
             let listing = Listing::<T::AccountId> {
                 seller: s.clone(),
                 price: p,
@@ -80,6 +80,9 @@ decl_module! {
             };
 
             let listing_id = <NextId<T>>::get();
+            //TODO mark this to explicitly overflow.
+            // because old ids will be ready to be
+            // recycled by the time overflow happens.
             <NextId<T>>::mutate(|n| *n += 1);
             <Listings<T>>::insert(listing_id, &listing);
 
@@ -89,6 +92,7 @@ decl_module! {
             Ok(())
         }
 
+        /// Mark an item that you posted for sale as no longer for sale.
         pub fn cancel_listing(origin, listing_id: ListingId) -> Result {
             let sender = ensure_signed(origin)?;
             ensure!(<Listings<T>>::exists(listing_id), "No such listing to cancel");
@@ -106,11 +110,13 @@ decl_module! {
 
         }
 
+        /// Buy an item specified by the supplied listing
         pub fn buy(origin, listing_id: ListingId) -> Result {
             let buyer = ensure_signed(origin)?;
 
             ensure!(<Listings<T>>::exists(listing_id), "No such listing to buy");
             ensure!(<Statuses<T>>::get(listing_id) != Status::Sold, "Listing already sold");
+            //TODO Also make sure it isn't seller reviewed or buyer reviewed
             ensure!(<Listings<T>>::get(listing_id).unwrap().seller != buyer, "Can't buy own listing");
 
             // Update storage
@@ -155,6 +161,7 @@ decl_module! {
                     <Statuses<T>>::remove(listing_id);
                     <Listings<T>>::remove(listing_id);
                     <Buyers<T>>::remove(listing_id);
+                    //Self::deposit_event(RawEvent::Sold(&reviewer, listing_id));
                 },
                 _ => return Err("You've already reviewed this listing"),
             }
@@ -172,6 +179,7 @@ decl_event!(
         Posted(AccountId, ListingId, Listing<AccountId>),
         Cancelled(ListingId),
         Sold(AccountId, ListingId),
+        //Settled(AccountId, ListingId),
     }
 );
 
