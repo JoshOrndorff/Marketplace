@@ -12,28 +12,45 @@ This project may illustrate several useful aspects of Substrate runtime developm
 2. Write your own implementation of the `Feedback` trait
 3. Make Marketplace depend on some notion of `Currency` to actually pay for purchases.
 
-## Building
+## Getting Started
+
+### Build the Node
 
 ```bash
 # Install Rust
 curl https://sh.rustup.rs -sSf | sh
 
+# Change to node directory
+cd node
+
 # Install required tools:
 ./scripts/init.sh
 
-# Build the WebAssembly binary
-./scripts/build.sh
-
-# Build the native binary
-cargo build
+# Build the node binary
+cargo build --release
 ```
 
-## Launch a Chain
+### Launch a Chain
 
 You can start a development chain with
 
 ```bash
-cargo run -- --dev
+cargo run --release -- purge-chain --dev
+cargo run --release -- --dev
 ```
 
 This is a Substrate-based chain, so you can learn much more about starting chains at the [Substrate Developer Hub](https://substrate.dev).
+
+## Launch the User Interface
+```bash
+# Change to ui directory
+cd ../ui
+
+# Install dependencies
+yarn
+
+# Start UI
+yarn start
+```
+
+Then navigate to [localhost:3000](localhost:3000) in your favorite browser.
