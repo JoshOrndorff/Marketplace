@@ -80,6 +80,8 @@ decl_module! {
             NextId::mutate(|n| *n += 1);
             <Listings<T>>::insert(listing_id, listing.clone());
 
+            Statuses::insert(listing_id, Status::Active);
+
 
             // Raise the event
             Self::deposit_event(RawEvent::Posted(s, listing_id, listing));
