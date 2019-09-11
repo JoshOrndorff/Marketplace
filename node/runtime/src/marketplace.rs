@@ -78,7 +78,7 @@ decl_module! {
             // because old ids will be ready to be
             // recycled by the time overflow happens.
             NextId::mutate(|n| *n += 1);
-            <Listings<T>>::insert(listing_id, &Some(listing.clone()));
+            <Listings<T>>::insert(listing_id, listing.clone());
 
 
             // Raise the event
