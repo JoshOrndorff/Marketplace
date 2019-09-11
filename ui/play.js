@@ -1,6 +1,5 @@
 const { ApiPromise, WsProvider } = require('@polkadot/api');
 const { Keyring } = require('@polkadot/keyring');
-const { cryptoWaitReady } = require('@polkadot/util-crypto');
 
 const TYPES = {
   "ListingId": "u32",
@@ -34,26 +33,31 @@ async function main() {
     types: TYPES,
   });
 
-  // Thought this shouldn't be necessary since I'm creating the
-  // keyring after awating for the api...
-  // https://polkadot.js.org/api/start/keyring.html#creating-a-keyring-instance
-  await cryptoWaitReady();
-
   // Create the keyring and add the well-known Alice account
   const keyring = new Keyring({ type: 'sr25519' });
   const alice = keyring.addFromUri('//Alice', { name: 'Alice'}); //Error here
-  console.log(alice);
+  console.log(alice.address);
 
   // Setup initial conditions.
   // Alice posts an item for sale.
+  let listingId = await api.query.marketplace.nextId();
   let price = 100;
   let description = 1234567890;
-  //api.tx.marketplace.postListing(price, description).signAndSend(alice);
+  const unsub = await api.tx.marketplace.postListing(price, description).signAndSend(alice, ({ status }) => {
+    if (status.isFinalized) {
+      console.log("It is time");
+      unsub();
 
-  // Tell me about listing 0
-  let listing0 = await api.query.marketplace.statuses(0);
-  console.log(`Listing 0 isSome: ${listing0.isSome}`);
-  console.log(`Listing 0 isNone: ${listing0.isNone}`);
+      // Tell me about listing Alice's Listing
+      let listing = api.query.marketplace.statuses(listingId);
+      console.log(`Listing isSome: ${listing.isSome}`);
+      console.log(`Listing isNone: ${listing.isNone}`);
+
+      process.exit(0);
+    }
+  });
+
+
 
 
   // listing0 = listing0.unwrap();
@@ -72,4 +76,4 @@ async function main() {
 
 }
 
-main().catch(console.error).finally(() => process.exit());
+main().catch(console.error);
