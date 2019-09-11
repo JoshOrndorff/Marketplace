@@ -43,13 +43,14 @@ async function main() {
   let listingId = await api.query.marketplace.nextId();
   let price = 100;
   let description = 1234567890;
-  const unsub = await api.tx.marketplace.postListing(price, description).signAndSend(alice, ({ status }) => {
+  const unsub = await api.tx.marketplace.postListing(price, description).signAndSend(alice, async ({ status }) => {
     if (status.isFinalized) {
       console.log("It is time");
       unsub();
 
       // Tell me about listing Alice's Listing
-      let listing = api.query.marketplace.statuses(listingId);
+      let listing = await api.query.marketplace.statuses(listingId);
+      console.log(listingId);
       console.log(`Listing isSome: ${listing.isSome}`);
       console.log(`Listing isNone: ${listing.isNone}`);
 
