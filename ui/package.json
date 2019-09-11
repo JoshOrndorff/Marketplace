@@ -1,8 +1,7 @@
 {
-  "name": "substrate-ui-template",
+  "name": "Open Marketplace",
   "version": "0.1.1",
-  "private": true,
-  "author": "Parity Technologies <admin@parity.io>",
+  "author": "Joshy Orndorff",
   "license": "Unlicense",
   "dependencies": {
     "@polkadot/api": "^0.92.0-beta.6",
@@ -36,11 +35,13 @@
       "last 1 safari version"
     ]
   },
-  "homepage": "https://substrate-developer-hub.github.io/substrate-ui-template",
+  "homepage": "https://github.com/JoshOrndorff/marketplaceo/substrate-ui-template",
   "bugs": {
-    "url": "https://github.com/substrate-developer-hub/substrate-ui-template/issues"
+    "url": "https://github.com/JoshOrndorff/marketplace/issues"
   },
   "keywords": [
+    "blockchain",
+    "marketplace",
     "substrate",
     "substrate-ui",
     "polkadot-js"

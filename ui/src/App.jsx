@@ -15,10 +15,8 @@ import Events from "./Events";
 import Extrinsics from "./Extrinsics";
 import Metadata from "./Metadata";
 import NodeInfo from "./NodeInfo";
-import ProofOfExistence from "./examples/ProofOfExistence";
-import TemplateModule from "./examples/TemplateModule";
 import Transfer from "./Transfer";
-import Upgrade from "./Upgrade";
+import ExploreListing from "./ExploreListing";
 
 export default function App() {
   const [api, setApi] = useState();
@@ -26,22 +24,41 @@ export default function App() {
   const [accountLoaded, setAccountLoaded] = useState(false);
   const [accountAddress, setAccountAddress] = useState("");
 
-  //const WS_PROVIDER = "ws://127.0.0.1:9944";
-  const WS_PROVIDER = "wss://dev-node.substrate.dev";
+  const WS_PROVIDER = "ws://127.0.0.1:9944";
+  //const WS_PROVIDER = "wss://dev-node.substrate.dev";
 
   const accountPair = accountAddress && keyring.getPair(accountAddress);
 
   useEffect(() => {
     const provider = new WsProvider(WS_PROVIDER);
-
-    const TYPES = {};
-    //const TYPES = {"MyNumber": "u32"};
-    // More information on custom types
-    // https://github.com/polkadot-js/apps/blob/master/packages/app-settings/src/md/basics.md
+    const types = {
+      "ListingId": "u32",
+      "Score": "i32",
+      "Listing": {
+        "seller": "AccountId",
+        "price": "u32",
+        "description": "u32"
+      },
+      "Status": {
+        "_enum": [
+          "Active",
+          "Sold",
+          "SellerReviewed",
+          "BuyerReviewed"
+        ]
+      },
+      "DefaultFeedback": {
+        "_enum": [
+          "Positive",
+          "Negative"
+        ]
+      },
+      "FeedbackOf": "DefaultFeedback"
+    };
 
     ApiPromise.create({
       provider,
-      types: TYPES
+      types,
     })
       .then(api => {
         setApi(api);
@@ -50,7 +67,7 @@ export default function App() {
       .catch(e => console.error(e));
   }, []);
 
-  // new hook to get injected accounts
+  // Get injected accounts
   useEffect(() => {
     web3Enable("substrate-front-end-tutorial")
       .then(extensions => {
@@ -127,7 +144,7 @@ export default function App() {
           </Grid.Row>
           <Grid.Row>
             <Transfer api={api} accountPair={accountPair} />
-            <Upgrade api={api} accountPair={accountPair} />
+            <ExploreListing api={api} accountPair={accountPair} />
           </Grid.Row>
           <Grid.Row>
             <Extrinsics api={api} accountPair={accountPair} />
@@ -136,8 +153,7 @@ export default function App() {
           </Grid.Row>
           {/* These components render if a module is present in the runtime. */}
           <Grid.Row>
-            { api.query.poe && <ProofOfExistence api={api} accountPair={accountPair}/> }
-            { api.query.templateModule && <TemplateModule api={api} accountPair={accountPair} /> }
+            { /* TODO put conditional components for each reputation system here */ }
           </Grid.Row>
         </Grid>
         {/* These components don't render elements. */}
