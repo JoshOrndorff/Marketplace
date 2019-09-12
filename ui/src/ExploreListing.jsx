@@ -6,11 +6,9 @@ import TxButton from "./TxButton";
 export default function ExploreListing(props) {
   const { api, accountPair } = props;
   const [listingId, setListingId] = useState(0);
-  const [listing, setListing] = useState("initial");
-  const [buyer, setBuyer] = useState("initial");
-  const [status, setStatus] = useState("initial");
-  // Tried using this dummy object as initial state
-  // { isEmpty: () => true }
+  const [listing, setListing] = useState("No such listing");
+  const [buyer, setBuyer] = useState("No such listing");
+  const [status, setStatus] = useState("No such listing");
 
   // Load the listing in question
   // TODO Consider allowing user to view multiple listings at once
@@ -22,12 +20,18 @@ export default function ExploreListing(props) {
       [api.query.marketplace.buyers,   listingId],
       [api.query.marketplace.statuses, listingId],
     ], ([l, b, s]) => {
-      console.log(`got some results ${l}, ${b}, ${s}`);
-      setListing(l);
-      setBuyer(b);
-      setStatus(s);
-      // State variables seem to update Correctly. Why doesn't the table below update?
-      console.log(`state variables are ${listing}, ${buyer}, ${status}`);
+      console.log(`got some results ${l.isSome ? l : "None"}, ${b}, ${s}`);
+      // Buyers is currently the onlyone not an Option<_>
+      if (l.isSome) {
+        setListing(l.unwrap());
+        setBuyer(b);
+        setStatus(s.unwrap());
+      }
+      else {
+        setListing("No such listing");
+        setBuyer("No such listing");
+        setStatus("No such listing");
+      }
     })
     .then(u => {
       unsubscribe = u;
@@ -37,7 +41,12 @@ export default function ExploreListing(props) {
     return () => unsubscribe && unsubscribe();
   }, /*[listingId, accountPair]*/);
 
-
+  function logged(d) {
+    console.log("in logged");
+    console.log(`Type is ${typeof(d)}`);
+    console.log(d);
+    return d;
+  }
 
   return (
     <Grid.Column>
@@ -45,9 +54,8 @@ export default function ExploreListing(props) {
       <Form>
         <Form.Field>
           <Input
-            value={0}
             type="number"
-            id="listing_is"
+            id="listing_id"
             label="Listing ID"
             onChange={(_, { value }) => setListingId(value)}
           />
@@ -57,15 +65,23 @@ export default function ExploreListing(props) {
         <Table.Body>
           <Table.Row>
             <Table.Cell textAlign="right">Seller</Table.Cell>
-            <Table.Cell textAlign="left">{listing.seller}</Table.Cell>
+            <Table.Cell textAlign="left">{JSON.stringify(listing.seller)}</Table.Cell>
           </Table.Row>
           <Table.Row>
             <Table.Cell textAlign="right">Price</Table.Cell>
-            <Table.Cell textAlign="left">{listing.price}</Table.Cell>
+            <Table.Cell textAlign="left">{JSON.stringify(listing.price)}</Table.Cell>
           </Table.Row>
           <Table.Row>
             <Table.Cell textAlign="right">Description</Table.Cell>
-            <Table.Cell textAlign="left">{listing.description}</Table.Cell>
+            <Table.Cell textAlign="left">{JSON.stringify(listing.description)}</Table.Cell>
+          </Table.Row>
+          <Table.Row>
+            <Table.Cell textAlign="right">Status</Table.Cell>
+            <Table.Cell textAlign="left">{JSON.stringify(status)}</Table.Cell>
+          </Table.Row>
+          <Table.Row>
+            <Table.Cell textAlign="right">Buyer</Table.Cell>
+            <Table.Cell textAlign="left">{JSON.stringify(buyer)}</Table.Cell>
           </Table.Row>
         </Table.Body>
       </Table>
