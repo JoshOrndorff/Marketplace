@@ -22,16 +22,9 @@ export default function ExploreListing(props) {
     ], ([l, b, s]) => {
       console.log(`got some results ${l.isSome ? l : "None"}, ${b}, ${s}`);
       // Buyers is currently the onlyone not an Option<_>
-      if (l.isSome) {
-        setListing(l.unwrap());
-        setBuyer(b);
-        setStatus(s.unwrap());
-      }
-      else {
-        setListing("No such listing");
-        setBuyer("No such listing");
-        setStatus("No such listing");
-      }
+      setListing(l);
+      setBuyer(b);
+      setStatus(s);
     })
     .then(u => {
       unsubscribe = u;
@@ -41,11 +34,40 @@ export default function ExploreListing(props) {
     return () => unsubscribe && unsubscribe();
   }, /*[listingId, accountPair]*/);
 
-  function logged(d) {
-    console.log("in logged");
-    console.log(`Type is ${typeof(d)}`);
-    console.log(d);
-    return d;
+  function renderDetails() {
+    if (listing.isSome) {
+      return (
+        <Table celled striped size="small">
+          <Table.Body>
+            <Table.Row>
+              <Table.Cell textAlign="right">Seller</Table.Cell>
+              <Table.Cell textAlign="left">{JSON.stringify(listing.unwrap().seller)}</Table.Cell>
+            </Table.Row>
+            <Table.Row>
+              <Table.Cell textAlign="right">Price</Table.Cell>
+              <Table.Cell textAlign="left">{JSON.stringify(listing.unwrap().price)}</Table.Cell>
+            </Table.Row>
+            <Table.Row>
+              <Table.Cell textAlign="right">Description</Table.Cell>
+              <Table.Cell textAlign="left">{JSON.stringify(listing.unwrap().description)}</Table.Cell>
+            </Table.Row>
+            <Table.Row>
+              <Table.Cell textAlign="right">Status</Table.Cell>
+              <Table.Cell textAlign="left">{JSON.stringify(status)}</Table.Cell>
+            </Table.Row>
+            <Table.Row>
+              <Table.Cell textAlign="right">Buyer</Table.Cell>
+              <Table.Cell textAlign="left">{JSON.stringify(buyer)}</Table.Cell>
+            </Table.Row>
+          </Table.Body>
+        </Table>
+      )
+    }
+    else {
+      return (
+        <p>Nothing to see here</p>
+      )
+    }
   }
 
   return (
@@ -61,30 +83,7 @@ export default function ExploreListing(props) {
           />
         </Form.Field>
       </Form>
-      <Table celled striped size="small">
-        <Table.Body>
-          <Table.Row>
-            <Table.Cell textAlign="right">Seller</Table.Cell>
-            <Table.Cell textAlign="left">{JSON.stringify(listing.seller)}</Table.Cell>
-          </Table.Row>
-          <Table.Row>
-            <Table.Cell textAlign="right">Price</Table.Cell>
-            <Table.Cell textAlign="left">{JSON.stringify(listing.price)}</Table.Cell>
-          </Table.Row>
-          <Table.Row>
-            <Table.Cell textAlign="right">Description</Table.Cell>
-            <Table.Cell textAlign="left">{JSON.stringify(listing.description)}</Table.Cell>
-          </Table.Row>
-          <Table.Row>
-            <Table.Cell textAlign="right">Status</Table.Cell>
-            <Table.Cell textAlign="left">{JSON.stringify(status)}</Table.Cell>
-          </Table.Row>
-          <Table.Row>
-            <Table.Cell textAlign="right">Buyer</Table.Cell>
-            <Table.Cell textAlign="left">{JSON.stringify(buyer)}</Table.Cell>
-          </Table.Row>
-        </Table.Body>
-      </Table>
+      { renderDetails() }
       <Grid.Row>
       <TxButton
         api={api}

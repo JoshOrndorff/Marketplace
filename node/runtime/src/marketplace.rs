@@ -40,8 +40,15 @@ pub enum Status {
     Sold,
     SellerReviewed,
     BuyerReviewed,
-    // There is no status for settled. Once both reviews
-    // have come in, the sale is removed from storage, and an event emitted.
+    NonExistant,
+    // Listings are never explicitly marked NonExistant. It exists only to be default.
+    // Once both reviews have come in, the sale is removed from storage, and an event emitted.
+}
+
+impl Default for Status {
+    fn default() -> Self {
+        Self::NonExistant
+    }
 }
 
 
@@ -51,7 +58,7 @@ decl_storage! {
         NextId get(next_id): ListingId;
         Listings get(listing): map ListingId => Option<Listing<T::AccountId>>;
         Buyers get(buyer): map ListingId => T::AccountId;
-        Statuses get(status): map ListingId => Option<Status>;
+        Statuses get(status): map ListingId => Status;
     }
 }
 
@@ -92,7 +99,7 @@ decl_module! {
         pub fn cancel_listing(origin, listing_id: ListingId) -> Result {
             let sender = ensure_signed(origin)?;
             ensure!(<Listings<T>>::exists(listing_id), "No such listing to cancel");
-            ensure!(Statuses::get(listing_id) == Some(Status::Active), "Cannot cancel already-sold listing");
+            ensure!(Statuses::get(listing_id) == Status::Active, "Cannot cancel already-sold listing");
             ensure!(<Listings<T>>::get(listing_id).unwrap().seller == sender, "Cannot cancel another seller's listing");
 
             // Remove listing from map
@@ -111,7 +118,7 @@ decl_module! {
             let buyer = ensure_signed(origin)?;
 
             ensure!(<Listings<T>>::exists(listing_id), "No such listing to buy");
-            ensure!(Statuses::get(listing_id) != Some(Status::Sold), "Listing already sold");
+            ensure!(Statuses::get(listing_id) != Status::Sold, "Listing already sold");
             //TODO Also make sure it isn't seller reviewed or buyer reviewed
             ensure!(<Listings<T>>::get(listing_id).unwrap().seller != buyer, "Can't buy own listing");
 
@@ -146,14 +153,14 @@ decl_module! {
                 };
 
             match (status, role) {
-                (Some(Status::Sold), Role::Buyer) => {
+                (Status::Sold, Role::Buyer) => {
                     Statuses::insert(listing_id, Status::BuyerReviewed);
                 },
-                (Some(Status::Sold), Role::Seller) => {
+                (Status::Sold, Role::Seller) => {
                     Statuses::insert(listing_id, Status::SellerReviewed);
                 },
-                (Some(Status::SellerReviewed), Role::Buyer) |
-                (Some(Status::BuyerReviewed), Role::Seller) => {
+                (Status::SellerReviewed, Role::Buyer) |
+                (Status::BuyerReviewed, Role::Seller) => {
                     Statuses::remove(listing_id);
                     <Listings<T>>::remove(listing_id);
                     <Buyers<T>>::remove(listing_id);
