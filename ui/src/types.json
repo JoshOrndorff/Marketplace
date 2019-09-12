@@ -11,7 +11,8 @@
       "Active",
       "Sold",
       "SellerReviewed",
-      "BuyerReviewed"
+      "BuyerReviewed",
+      "NonExistant"
     ]
   },
   "DefaultFeedback": {

@@ -5,6 +5,7 @@ import React, { useState, useEffect, createRef } from "react";
 import { Container, Dimmer, Loader, Grid, Sticky } from "semantic-ui-react";
 
 import "semantic-ui-css/semantic.min.css";
+import types from "./types.json";
 
 import AccountSelector from "./AccountSelector";
 import Balances from "./Balances";
@@ -31,30 +32,6 @@ export default function App() {
 
   useEffect(() => {
     const provider = new WsProvider(WS_PROVIDER);
-    const types = {
-      "ListingId": "u32",
-      "Score": "i32",
-      "Listing": {
-        "seller": "AccountId",
-        "price": "u32",
-        "description": "u32"
-      },
-      "Status": {
-        "_enum": [
-          "Active",
-          "Sold",
-          "SellerReviewed",
-          "BuyerReviewed"
-        ]
-      },
-      "DefaultFeedback": {
-        "_enum": [
-          "Positive",
-          "Negative"
-        ]
-      },
-      "FeedbackOf": "DefaultFeedback"
-    };
 
     ApiPromise.create({
       provider,
