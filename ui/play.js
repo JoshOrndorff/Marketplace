@@ -49,10 +49,10 @@ async function main() {
       unsub();
 
       // Tell me about listing Alice's Listing
-      let listings = await api.query.marketplace.statuses();
-      console.log(listings);
-      // console.log(`Listing isSome: ${listing.isSome}`);
-      // console.log(`Listing isNone: ${listing.isNone}`);
+      let listing = await api.query.marketplace.statuses(listingId);
+      console.log(listingId)
+      console.log(`Listing isSome: ${listing.isSome}`);
+      console.log(`Listing isNone: ${listing.isNone}`);
 
       process.exit(0);
     }
