@@ -3,15 +3,15 @@ import { Form, Input, Grid } from "semantic-ui-react";
 
 import TxButton from "./TxButton";
 
-export default function Transfer(props) {
+export default function PostListing(props) {
   const { api, accountPair } = props;
   const [status, setStatus] = useState("");
   const initialState = {
-    addressTo: "",
-    amount: 0
+    price: 0,
+    description: 0,
   };
   const [formState, setFormState] = useState(initialState);
-  const { addressTo, amount } = formState;
+  const { price, description } = formState;
 
   const onChange = (_, data) => {
     setFormState(formState => {
@@ -24,24 +24,25 @@ export default function Transfer(props) {
 
   return (
     <Grid.Column>
-      <h1>Transfer</h1>
+      <h1>Post Listing</h1>
+      <p>During POC, description is just a number. If this dApp gets more serious, it can become a string.</p>
       <Form>
         <Form.Field>
           <Input
             onChange={onChange}
-            label="To"
+            label="Description"
             fluid
-            placeholder="address"
-            state="addressTo"
-            type="text"
+            placeholder="0123"
+            state="description"
+            type="number"
           />
         </Form.Field>
         <Form.Field>
           <Input
-            label="Amount"
+            label="Price"
             fluid
             onChange={onChange}
-            state="amount"
+            state="price"
             type="number"
           />
         </Form.Field>
@@ -49,10 +50,10 @@ export default function Transfer(props) {
           <TxButton
             api={api}
             accountPair={accountPair}
-            label={"Send"}
-            params={[addressTo, amount]}
+            label={"Sell"}
+            params={[price, description]}
             setStatus={setStatus}
-            tx={api.tx.balances.transfer}
+            tx={api.tx.marketplace.postListing}
           />
           {status}
         </Form.Field>

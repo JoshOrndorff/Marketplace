@@ -15,8 +15,8 @@ import Events from "./Events";
 import Extrinsics from "./Extrinsics";
 import Metadata from "./Metadata";
 import NodeInfo from "./NodeInfo";
-import Transfer from "./Transfer";
 import ExploreListing from "./ExploreListing";
+import PostListing from "./PostListing";
 
 export default function App() {
   const [api, setApi] = useState();
@@ -143,7 +143,7 @@ export default function App() {
             <Balances api={api} keyring={keyring} />
           </Grid.Row>
           <Grid.Row>
-            <Transfer api={api} accountPair={accountPair} />
+            <PostListing api={api} accountPair={accountPair} />
             <ExploreListing api={api} accountPair={accountPair} />
           </Grid.Row>
           <Grid.Row>
