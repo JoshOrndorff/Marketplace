@@ -20,8 +20,6 @@ export default function ExploreListing(props) {
       [api.query.marketplace.buyers,   listingId],
       [api.query.marketplace.statuses, listingId],
     ], ([l, b, s]) => {
-      console.log(`got some results ${l.isSome ? l : "None"}, ${b}, ${s}`);
-      // Buyers is currently the onlyone not an Option<_>
       setListing(l);
       setBuyer(b);
       setStatus(s);
@@ -41,23 +39,23 @@ export default function ExploreListing(props) {
           <Table.Body>
             <Table.Row>
               <Table.Cell textAlign="right">Seller</Table.Cell>
-              <Table.Cell textAlign="left">{JSON.stringify(listing.unwrap().seller)}</Table.Cell>
+              <Table.Cell textAlign="left">{listing.unwrap().seller.toString()}</Table.Cell>
             </Table.Row>
             <Table.Row>
               <Table.Cell textAlign="right">Price</Table.Cell>
-              <Table.Cell textAlign="left">{JSON.stringify(listing.unwrap().price)}</Table.Cell>
+              <Table.Cell textAlign="left">{listing.unwrap().price.toString()}</Table.Cell>
             </Table.Row>
             <Table.Row>
               <Table.Cell textAlign="right">Description</Table.Cell>
-              <Table.Cell textAlign="left">{JSON.stringify(listing.unwrap().description)}</Table.Cell>
+              <Table.Cell textAlign="left">{listing.unwrap().description.toString()}</Table.Cell>
             </Table.Row>
             <Table.Row>
               <Table.Cell textAlign="right">Status</Table.Cell>
-              <Table.Cell textAlign="left">{JSON.stringify(status)}</Table.Cell>
+              <Table.Cell textAlign="left">{status.toString()}</Table.Cell>
             </Table.Row>
             <Table.Row>
               <Table.Cell textAlign="right">Buyer</Table.Cell>
-              <Table.Cell textAlign="left">{JSON.stringify(buyer)}</Table.Cell>
+              <Table.Cell textAlign="left">{buyer.toString()}</Table.Cell>
             </Table.Row>
           </Table.Body>
         </Table>
@@ -91,7 +89,7 @@ export default function ExploreListing(props) {
         label={"Buy"}
         params={[listingId]}
         setStatus={setStatus}
-        disabled={status !== "Active"}
+        disabled={ !status.isActive /* TODO Also disable if user is seller */}
         tx={api.tx.marketplace.buy}
       />
       </Grid.Row>
