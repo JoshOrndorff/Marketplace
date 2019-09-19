@@ -21,7 +21,7 @@ export default function ExploreListing(props) {
       [api.query.marketplace.statuses, listingId],
     ], ([l, b, s]) => {
       setListing(l);
-      setBuyer(b);
+      setBuyer(b.isSome ? b : "No buyer");
       setStatus(s);
     })
     .then(u => {
@@ -71,7 +71,7 @@ export default function ExploreListing(props) {
   function canBuy() {
     return listing.isSome &&
       status.isActive &&
-      listing.unwrap().seller.toString !== accountPair.address;
+      listing.unwrap().seller.toString() !== accountPair.address;
   }
 
   function canCancel() {

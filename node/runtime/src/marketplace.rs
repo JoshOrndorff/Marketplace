@@ -8,19 +8,19 @@ use system::ensure_signed;
 use codec::{ Encode, Decode };
 
 // Use the Reputation trait
-use crate::reputation_trait;
+use crate::reputation_trait::Reputation;
 
 /// Marketplace configuration trait.
 pub trait Trait: system::Trait {
     // Notaion of reputation system
-    type ReputationSystem: reputation_trait::Reputation<Self::AccountId>;
+    type ReputationSystem: Reputation<Self::AccountId>;
 
     /// The overarching event type.
     type Event: From<Event<Self>> + Into<<Self as system::Trait>::Event>;
 }
 
 type ListingId = u32;
-type FeedbackOf<T> = <<T as Trait>::ReputationSystem as reputation_trait::Reputation<<T as system::Trait>::AccountId>>::Feedback;
+type FeedbackOf<T> = <<T as Trait>::ReputationSystem as Reputation<<T as system::Trait>::AccountId>>::Feedback;
 
 #[derive(Encode, Decode, Default, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "std", derive(Debug))]
@@ -57,7 +57,7 @@ decl_storage! {
     trait Store for Module<T: Trait> as Marketplace {
         NextId get(next_id): ListingId;
         Listings get(listing): map ListingId => Option<Listing<T::AccountId>>;
-        Buyers get(buyer): map ListingId => T::AccountId;
+        Buyers get(buyer): map ListingId => Option<T::AccountId>;
         Statuses get(status): map ListingId => Status;
     }
 }
@@ -116,8 +116,7 @@ decl_module! {
             let buyer = ensure_signed(origin)?;
 
             ensure!(<Listings<T>>::exists(listing_id), "No such listing to buy");
-            ensure!(Statuses::get(listing_id) != Status::Sold, "Listing already sold");
-            //TODO Also make sure it isn't seller reviewed or buyer reviewed
+            ensure!(Statuses::get(listing_id) == Status::Active, "Listing already sold");
             ensure!(<Listings<T>>::get(listing_id).unwrap().seller != buyer, "Can't buy own listing");
 
             // Update storage
@@ -137,13 +136,14 @@ decl_module! {
             let reviewer = ensure_signed(origin)?;
 
             ensure!(<Listings<T>>::exists(listing_id), "No such listing");
+            ensure!(Statuses::get(listing_id) != Status::Active, "Listing is still active");
 
             let status = Statuses::get(listing_id);
             let (role, reviewee) =
                 if <Listings<T>>::get(listing_id).unwrap().seller == reviewer {
-                    (Role::Seller, <Buyers<T>>::get(listing_id))
+                    (Role::Seller, <Buyers<T>>::get(listing_id).unwrap())
                 }
-                else if <Buyers<T>>::get(listing_id) == reviewer{
+                else if <Buyers<T>>::get(listing_id) == Some(reviewer.clone()) {
                     (Role::Buyer, <Listings<T>>::get(listing_id).unwrap().seller)
                 }
                 else {
@@ -162,13 +162,13 @@ decl_module! {
                     Statuses::remove(listing_id);
                     <Listings<T>>::remove(listing_id);
                     <Buyers<T>>::remove(listing_id);
-                    //Self::deposit_event(RawEvent::Sold(&reviewer, listing_id));
+                    Self::deposit_event(RawEvent::Settled(reviewer.clone(), listing_id));
                 },
                 _ => return Err("You've already reviewed this listing"),
             }
 
             // Call into the reputation system
-            let _ = <<T as Trait>::ReputationSystem as reputation_trait::Reputation<T::AccountId>>::rate(reviewer, reviewee, feedback);
+            let _ = <<T as Trait>::ReputationSystem as Reputation<T::AccountId>>::rate(reviewer, reviewee, feedback);
 
             Ok(())
         }
@@ -180,7 +180,7 @@ decl_event!(
         Posted(AccountId, ListingId, Listing<AccountId>),
         Cancelled(ListingId),
         Sold(AccountId, ListingId),
-        //Settled(AccountId, ListingId),
+        Settled(AccountId, ListingId),
     }
 );
 
@@ -221,7 +221,7 @@ mod tests {
         type Log = DigestItem;
     }
 
-    impl reputation_trait::Reputation<u64> for () {
+    impl Reputation<u64> for () {
         type Score = ();
         type Feedback = ();
         fn rate(_rater: u64, _ratee: u64, _feedback: Self::Feedback)
