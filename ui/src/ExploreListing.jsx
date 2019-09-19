@@ -54,12 +54,6 @@ export default function ExploreListing(props) {
             <Table.Row>
               <Table.Cell textAlign="right">Price</Table.Cell>
               <Table.Cell textAlign="left">{listing.unwrap().price.toString()}</Table.Cell>
-              <Table.Cell> {
-                api.query.simpleFeedback
-                ? <SimpleFeedback api={api} address={listing.unwrap().seller.toString()} />
-                : <BetaFeedback api={api} address={listing.unwrap().seller.toString()} />
-              }
-              </Table.Cell>
             </Table.Row>
             <Table.Row>
               <Table.Cell textAlign="right">Description</Table.Cell>
@@ -72,6 +66,12 @@ export default function ExploreListing(props) {
             <Table.Row>
               <Table.Cell textAlign="right">Buyer</Table.Cell>
               <Table.Cell textAlign="left">{buyer.toString()}</Table.Cell>
+              <Table.Cell> {
+                api.query.simpleFeedback
+                ? <SimpleFeedback api={api} address={listing.unwrap().seller.toString()} />
+                : <BetaFeedback api={api} address={listing.unwrap().seller.toString()} />
+              }
+              </Table.Cell>
             </Table.Row>
           </Table.Body>
         </Table>
