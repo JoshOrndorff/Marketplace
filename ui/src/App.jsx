@@ -10,10 +10,7 @@ import types from "./types.json";
 import AccountSelector from "./AccountSelector";
 import Balances from "./Balances";
 import BlockNumber from "./BlockNumber";
-import ChainState from "./ChainState";
 import DeveloperConsole from "./DeveloperConsole";
-import Events from "./Events";
-import Extrinsics from "./Extrinsics";
 import Metadata from "./Metadata";
 import NodeInfo from "./NodeInfo";
 import ExploreListing from "./ExploreListing";
@@ -123,15 +120,6 @@ export default function App() {
           <Grid.Row>
             <PostListing api={api} accountPair={accountPair} />
             <ExploreListing api={api} accountPair={accountPair} />
-          </Grid.Row>
-          <Grid.Row>
-            <Extrinsics api={api} accountPair={accountPair} />
-            <ChainState api={api} />
-            <Events api={api} />
-          </Grid.Row>
-          {/* These components render if a module is present in the runtime. */}
-          <Grid.Row>
-            { /* TODO put conditional components for each reputation system here */ }
           </Grid.Row>
         </Grid>
         {/* These components don't render elements. */}
