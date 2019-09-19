@@ -68,6 +68,18 @@ export default function ExploreListing(props) {
     }
   }
 
+  function canBuy() {
+    return listing.isSome &&
+      status.isActive &&
+      listing.unwrap().seller.toString !== accountPair.address;
+  }
+
+  function canCancel() {
+    return listing.isSome &&
+      status.isActive &&
+      listing.unwrap().seller.toString() === accountPair.address;
+  }
+
   return (
     <Grid.Column>
       <h1>Explore Marketplace Listings</h1>
@@ -89,8 +101,17 @@ export default function ExploreListing(props) {
         label={"Buy"}
         params={[listingId]}
         setStatus={setStatus}
-        disabled={ !status.isActive /* TODO Also disable if user is seller */}
+        disabled={!canBuy()}
         tx={api.tx.marketplace.buy}
+      />
+      <TxButton
+        api={api}
+        accountPair={accountPair}
+        label={"Cancel"}
+        params={[listingId]}
+        setStatus={setStatus}
+        disabled={ !canCancel()}
+        tx={api.tx.marketplace.cancelListing}
       />
       </Grid.Row>
     </Grid.Column>
