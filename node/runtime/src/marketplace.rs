@@ -80,15 +80,13 @@ decl_module! {
                 description: d,
             };
 
+            // Update the listing_id
             let listing_id = NextId::get();
-            //TODO mark this to explicitly overflow.
-            // because old ids will be ready to be
-            // recycled by the time overflow happens.
-            NextId::mutate(|n| *n += 1);
+            NextId::put(listing_id.wrapping_add(1));
+
+            // Insert the new listing
             <Listings<T>>::insert(listing_id, listing.clone());
-
             Statuses::insert(listing_id, Status::Active);
-
 
             // Raise the event
             Self::deposit_event(RawEvent::Posted(s, listing_id, listing));
