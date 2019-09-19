@@ -24,7 +24,7 @@ export default function ExploreListing(props) {
       [api.query.marketplace.statuses, listingId],
     ], ([l, b, s]) => {
       setListing(l);
-      setBuyer(b.isSome ? b : "No buyer");
+      setBuyer(b.isSome ? b : "");
       setStatus(s);
     })
     .then(u => {
@@ -68,8 +68,8 @@ export default function ExploreListing(props) {
               <Table.Cell textAlign="left">{buyer.toString()}</Table.Cell>
               <Table.Cell> {
                 api.query.simpleFeedback
-                ? <SimpleFeedback api={api} address={listing.unwrap().seller.toString()} />
-                : <BetaFeedback api={api} address={listing.unwrap().seller.toString()} />
+                ? <SimpleFeedback api={api} address={buyer} />
+                : <BetaFeedback api={api} address={buyer} />
               }
               </Table.Cell>
             </Table.Row>
