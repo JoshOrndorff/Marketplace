@@ -15,7 +15,7 @@ export default function SimpleFeedback(props) {
     .catch(console.error);
 
     return () => unsub && unsub();
-  })
+  }, [api.query.simpleFeedback, address]);
 
   return (
     <div>{`Simple Feedback: ${score}`}</div>
