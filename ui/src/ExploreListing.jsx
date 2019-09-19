@@ -67,9 +67,11 @@ export default function ExploreListing(props) {
               <Table.Cell textAlign="right">Buyer</Table.Cell>
               <Table.Cell textAlign="left">{buyer.toString()}</Table.Cell>
               <Table.Cell> {
-                api.query.simpleFeedback
-                ? <SimpleFeedback api={api} address={buyer} />
-                : <BetaFeedback api={api} address={buyer} />
+                buyer ? (
+                  api.query.simpleFeedback
+                  ? <SimpleFeedback api={api} address={buyer.toString()} />
+                  : <BetaFeedback api={api} address={buyer.toString()} />
+                ) : ""
               }
               </Table.Cell>
             </Table.Row>
@@ -91,7 +93,7 @@ export default function ExploreListing(props) {
         (status.isSold || status.isBuyerReviewed) &&
         listing.unwrap().seller.toString() === accountPair.address
       ) ||
-      // I'm the buyer and I haven't reviewd yet
+      // I'm the buyer and I haven't reviewed yet
       (
         (status.isSold || status.isSellerReviewed) &&
         buyer.toString() === accountPair.address
