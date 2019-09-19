@@ -257,8 +257,8 @@ impl sudo::Trait for Runtime {
 }
 
 impl marketplace::Trait for Runtime {
-	//type ReputationSystem = SimpleFeedback;
-	type ReputationSystem = BetaFeedback;
+	type ReputationSystem = SimpleFeedback;
+	//type ReputationSystem = BetaFeedback;
 	type Event = Event;
 }
 
@@ -266,9 +266,9 @@ impl simple_feedback::Trait for Runtime {
 	type Event = Event;
 }
 
-impl beta_feedback::Trait for Runtime {
-	type Event = Event;
-}
+// impl beta_feedback::Trait for Runtime {
+// 	type Event = Event;
+// }
 
 construct_runtime!(
 	pub enum Runtime where
@@ -285,7 +285,7 @@ construct_runtime!(
 		Sudo: sudo,
 		Marketplace: marketplace::{Module, Call, Storage, Event<T>},
 		SimpleFeedback: simple_feedback::{Module, Storage, Event<T>},
-		BetaFeedback: beta_feedback::{Module, Storage, Event<T>},
+		//BetaFeedback: beta_feedback::{Module, Storage, Event<T>},
 	}
 );
 

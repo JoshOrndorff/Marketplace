@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Form, Input, Grid, Table } from "semantic-ui-react";
+import SimpleFeedback from "./SimpleFeedback.jsx";
+import BetaFeedback from "./BetaFeedback.jsx";
+
 
 import TxButton from "./TxButton";
 
@@ -40,10 +43,23 @@ export default function ExploreListing(props) {
             <Table.Row>
               <Table.Cell textAlign="right">Seller</Table.Cell>
               <Table.Cell textAlign="left">{listing.unwrap().seller.toString()}</Table.Cell>
+              <Table.Cell> {
+                // TODO this just detects whether SimpleFeedback is installed, not whether it is the feedback system for the marketplace.
+                api.query.simpleFeedback
+                ? <SimpleFeedback api={api} address={listing.unwrap().seller.toString()} />
+                : <BetaFeedback api={api} address={listing.unwrap().seller.toString()} />
+              }
+              </Table.Cell>
             </Table.Row>
             <Table.Row>
               <Table.Cell textAlign="right">Price</Table.Cell>
               <Table.Cell textAlign="left">{listing.unwrap().price.toString()}</Table.Cell>
+              <Table.Cell> {
+                api.query.simpleFeedback
+                ? <SimpleFeedback api={api} address={listing.unwrap().seller.toString()} />
+                : <BetaFeedback api={api} address={listing.unwrap().seller.toString()} />
+              }
+              </Table.Cell>
             </Table.Row>
             <Table.Row>
               <Table.Cell textAlign="right">Description</Table.Cell>
