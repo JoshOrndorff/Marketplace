@@ -68,6 +68,21 @@ export default function ExploreListing(props) {
     }
   }
 
+  function canReview() {
+    return listing.isSome && (
+      // I'm the seller and I haven't reviewed yet
+      (
+        (status.isSold || status.isBuyerReviewed) &&
+        listing.unwrap().seller.toString() === accountPair.address
+      ) ||
+      // I'm the buyer and I haven't reviewd yet
+      (
+        (status.isSold || status.isSellerReviewed) &&
+        buyer.toString() === accountPair.address
+      )
+    )
+  }
+
   function canBuy() {
     return listing.isSome &&
       status.isActive &&
@@ -112,6 +127,24 @@ export default function ExploreListing(props) {
         setStatus={setStatus}
         disabled={ !canCancel()}
         tx={api.tx.marketplace.cancelListing}
+      />
+      <TxButton
+        api={api}
+        accountPair={accountPair}
+        label={"Review Positively"}
+        params={[listingId, "Positive"]}
+        setStatus={setStatus}
+        disabled={ !canReview()}
+        tx={api.tx.marketplace.review}
+      />
+      <TxButton
+        api={api}
+        accountPair={accountPair}
+        label={"Review Negatively"}
+        params={[listingId, "Negative"]}
+        setStatus={setStatus}
+        disabled={ !canReview()}
+        tx={api.tx.marketplace.review}
       />
       </Grid.Row>
     </Grid.Column>
