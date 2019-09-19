@@ -20,5 +20,6 @@
       "Positive",
       "Negative"
     ]
-  }
+  },
+  "FeedbackOf": "DefaultFeedback"
 }
