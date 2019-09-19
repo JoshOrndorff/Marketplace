@@ -106,6 +106,7 @@ export default function App() {
         <AccountSelector
           keyring={keyring}
           setAccountAddress={setAccountAddress}
+          api={api}
         />
       </Sticky>
       <Container>
